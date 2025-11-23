@@ -1,0 +1,69 @@
+name: RPCS3 Windows Arm64 Build
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
+
+jobs:
+  build_arm64:
+    # Use the new Windows on Arm runner
+    runs-on: windows-11-arm64 
+    
+    steps:
+      # --- SETUP: Checkout and Dependencies ---
+
+      # 1. Checkout RPCS3 Source Code
+      - name: 📥 Checkout Repository and Submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # 2. Set up Visual Studio 2022 Build Tools (Arm64)
+      - name: ⚙️ Setup MSBuild/Visual Studio for Arm64
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: arm64
+          # Assumes the windows-11-arm64 image includes VS 2022 with Arm64 targets.
+
+      # 3. Install Python 3.x
+      - name: 🐍 Setup Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # 4. Install Qt 6.10.0
+      - name: 🎨 Install Qt 6.10.0 (MSVC 2022 Arm64)
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: 6.10.0
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_arm64
+          
+      # 5. Install Vulkan SDK 1.3.268.0
+      - name: 🌋 Install Vulkan SDK 1.3.268.0
+        uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.3.268.0
+          cache: true
+          
+      # --- BUILD: CMake and Compilation ---
+
+      # 6. Configure CMake for Release Build
+      - name: ⚙️ Configure RPCS3 with CMake
+        run: cmake --preset msvc -G "Ninja"
+        shell: cmd
+
+      # 7. Compile the Project (Release Mode)
+      - name: 🔨 Build RPCS3 (Release)
+        run: cmake --build --preset msvc-release
+        shell: cmd
+
+      # 8. Upload the Resulting Binary
+      - name: ⬆️ Upload Windows Arm64 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpcs3-windows-arm64
+          path: build-msvc\bin\rpcs3.exe
+          retention-days: 7
