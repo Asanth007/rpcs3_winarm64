@@ -8,7 +8,7 @@ on:
 jobs:
   build_arm64:
     # Use the new Windows on Arm runner
-    runs-on: windows-11-arm64 
+    runs-on: [self-hosted, Windows, ARM64]
     
     steps:
       # --- SETUP: Checkout and Dependencies ---
